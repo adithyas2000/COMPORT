@@ -2,7 +2,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import axios from 'axios';
 
+const lhost='http://localhost:5000/';
 
 function Search() {
     const [stext,setStext]=useState('');
@@ -24,7 +26,9 @@ function Search() {
     }
     function formSubmit(event){
     event.preventDefault();
-    
+    axios.get(lhost+'search?a='+stext)
+        .then(res=>console.log("AXIOS: "+res.data.a))
+        .catch(err=>{console.error("AXOS ERROR\n"+err.message)})
     }
 }
 
