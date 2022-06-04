@@ -9,8 +9,12 @@ import pymongo
 def getDataDict(dataobj):
     data={}
     for i in range(dataobj.lsize):
-        data[dataobj.ilist[i]]=dataobj.plist[i]
+        darray=[dataobj.ilist[i],dataobj.plist[i]]
+        data[str(i)]=darray
         print(dataobj.ilist[i]+" -- "+dataobj.plist[i])
+    data['size']=dataobj.lsize
+    print("DATA :")
+    print(data)
     return data
 
 
