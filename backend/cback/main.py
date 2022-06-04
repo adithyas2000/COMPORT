@@ -1,9 +1,18 @@
 
 # from requests import request
-import selenium
+# import selenium
+import kellsScraper as keels
 from flask import Flask, jsonify,request
 from flask_cors import CORS
 import pymongo
+
+def getDataDict(dataobj):
+    data={}
+    for i in range(dataobj.lsize):
+        data[dataobj.ilist[i]]=dataobj.plist[i]
+        print(dataobj.ilist[i]+" -- "+dataobj.plist[i])
+    return data
+
 
 app=Flask(__name__)
 cors=CORS(app)
@@ -19,9 +28,12 @@ def viewData(val1):
 @app.route('/search',methods=['GET','POST'])
 def search():
     if request.method == 'GET':
-        req=request.args.get('a')
-        print("REQ : "+req)
-        return jsonify(a=req)
+        req=request.args.get('sitem')
+        # print("REQ : "+req)
+        prodDet=keels.scrape(req)
+        prodDict=getDataDict(prodDet)
+
+        return jsonify(prodDict)
 
 @app.route('/testmongo/')
 def mongoConnect():
@@ -41,3 +53,4 @@ def mongoConnect():
 
 if __name__=='__main__':
     app.run()
+

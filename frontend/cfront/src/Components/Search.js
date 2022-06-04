@@ -26,9 +26,12 @@ function Search() {
     }
     function formSubmit(event){
     event.preventDefault();
-    axios.get(lhost+'search?a='+stext)
-        .then(res=>console.log("AXIOS: "+res.data.a))
-        .catch(err=>{console.error("AXOS ERROR\n"+err.message)})
+    axios.get(lhost+'search?sitem='+stext)
+        .then(res=>{
+          let jsonstr=JSON.stringify(res.data)
+          console.log("AXIOS: "+jsonstr)
+        })
+        .catch(err=>{console.error("AXOS ERROR MSG :"+err.message+"\nAXIOS ERROR REQ:"+err.request+"\nAXIOS ERROR RES:"+err.response)})
     }
 }
 
