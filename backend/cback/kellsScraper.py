@@ -10,7 +10,7 @@ import time
 
 from os.path import exists
 
-chrome_path=r"backend/cback/chromeWebdriver/chromedriver.exe"
+
 # chromeWebdriver/chromedriver.exe
 
 options=webdriver.ChromeOptions()
@@ -24,7 +24,8 @@ options=webdriver.ChromeOptions()
 #     driver.save_screenshot(fpath)
 #     fnum=fnum+1
 
-def scrape(iname):
+def scrape(iname,path):
+    chrome_path=path
     driver=webdriver.Chrome(chrome_path,chrome_options=options)
     driver.get('https://keellssuper.com/home')
     # fnum=0
@@ -34,7 +35,7 @@ def scrape(iname):
 
 
 
-
+    time.sleep(2)
     wlcBtn=driver.find_element(By.ID,'welcome_browse_btn')
 
     # saveSS()
@@ -62,8 +63,9 @@ def scrape(iname):
 
         time.sleep(3)
 
-        items=driver.find_elements_by_xpath('//div[@class="product-card-name col-md-12"]')
-        prices=driver.find_elements_by_xpath('//div[@class="product-card-final-price"]')
+        items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name col-md-12"]')
+        prices=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-final-price"]')
+        images=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
         
         # print("\n\n\nFound:\n")
         # print(str(len(items)))
@@ -80,7 +82,9 @@ def scrape(iname):
         if(len(items)!=0):
             itemtxt=[]
             pricetxt=[]
+            imgUrl=[]
             for i in range(len(items)):
+                imgUrl.append(images[i+1].get_attribute("src"))
                 # print(items[i].text+"  -  "+prices[i].text)
                 itemtxt.append(items[i].text)
                 pricetxt.append(prices[i].text)
@@ -94,6 +98,7 @@ def scrape(iname):
     class details():
         ilist=itemtxt
         plist=pricetxt
+        urllist=imgUrl
         lsize=len(items)
     return(details)
 
