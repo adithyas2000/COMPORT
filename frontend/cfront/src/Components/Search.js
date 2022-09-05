@@ -8,9 +8,16 @@ import axios from 'axios';
 const lhost='http://localhost:5000/';
 
 function Search() {
+
+  const s1Name="Keels";
+  const s2Name="Food City";
+  const s3Name="Arpico";
+
     const [stext,setStext]=useState('');
-    const[keellsDataState,setkeellsDataState]=useState(false);
-    const [keellsResData,setkeellsResData]=useState(null);
+    
+    const [keelsFound,setKeelsFound]=useState(false);
+    const [arpicoFound,setArpicoFound]=useState(false);
+    const [foodcityFound,setFoodcityFound]=useState(false);
 
     const [mainData,setMainData]=useState(null);
 
@@ -19,28 +26,43 @@ function Search() {
     const [shop3Sel,setShop3Sel]=useState(false);
 
     useEffect(()=>{
+      
       if(mainData!=null){
-        
-        // console.log("MAIN ARRAY : "+mainData[1]['size']);
-        setkeellsDataState(true);
-        console.log("NOT NULL IN EFFECT");
+        if(mainData[0]['NULL']!==undefined){
+          setKeelsFound(false);
+          console.log("Keels : "+mainData[0]['NULL']);
+        }else{
+          setKeelsFound(true);
+        }
+        if(mainData[1]['NULL']!==undefined){
+          setFoodcityFound(false);
+          console.log("Foodcity : "+mainData[1]['NULL']);
+        }else{
+          setFoodcityFound(true);
+        }
+        if(mainData[2]['NULL']!==undefined){
+          setArpicoFound(false);
+          console.log("Arpico : "+mainData[2]['NULL']);
+        }else{
+          setArpicoFound(true);
+        }
       }else{
-        console.log("NULL IN EFFECT!");
+        
       }
     },[mainData]);
 
   return (
     
-    <div id = 'container' style={{width:700}}>
+    <div id = 'container' style={{width:700,padding:50}}>
       <Form id='searchForm' onSubmit={formSubmit}>
         <Form.Group className='mb-3'>
-          <Form.Check type='checkbox' id='shop1check' label='Shop 1' checked={shop1Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
-          <Form.Check type='checkbox' id='shop2check' label='Shop 2' checked={shop2Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
-          <Form.Check type='checkbox' id='shop3check' label='Shop 3' checked={shop3Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
+          <Form.Check type='checkbox' id='shop1check' label={s1Name} defaultChecked={shop1Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
+          <Form.Check type='checkbox' id='shop2check' label={s2Name} defaultChecked={shop2Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
+          <Form.Check type='checkbox' id='shop3check' label={s3Name} defaultChecked={shop3Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
         </Form.Group>
         <Form.Group className='mb-3' controlId='searchText'>
           <Form.Label>Search for an item</Form.Label>
-          <Form.Control type='text' onChange={e=>{onStextChange(e.target.value)}}/>
+          <Form.Control type='text' required onChange={e=>{onStextChange(e.target.value)}}/>
         </Form.Group>
         <Button variant='primary' type='submit'>Search</Button>
       </Form>
@@ -48,13 +70,13 @@ function Search() {
       {keellsDataState && <Table striped bordered hover id='resTable'><thead><tr><th>Item</th><th>Price</th><th>IMG URL</th></tr></thead><tbody>{<FoodcityTable/>}</tbody></Table>} */}
       <Table striped bordered hover id='resTable'>
         <thead style={{width: "200"}}>
-          <tr>{shop1Sel && <th>Keells</th>}{shop2Sel && <th>Food City</th>}{shop3Sel && <th>Arpico</th>}</tr>
-          <tr>{shop1Sel && <td><Button>Sort</Button></td>}{shop2Sel && <td><Button>Sort</Button></td>}{shop3Sel && <td><Button>Sort</Button></td>}</tr>
+          <tr>{shop1Sel && keelsFound && <th>Keells</th>}{shop2Sel && foodcityFound && <th>Food City</th>}{shop3Sel && arpicoFound && <th>Arpico</th>}</tr>
+          <tr>{shop1Sel && keelsFound && <td><Button>Sort</Button></td>}{shop2Sel && foodcityFound && <td><Button>Sort</Button></td>}{shop3Sel && arpicoFound && <td><Button>Sort</Button></td>}</tr>
         </thead>
 
         <tbody>
           <tr>
-            {shop1Sel && <td>
+            {shop1Sel && keelsFound && <td>
               <Table striped bordered hover>
                 <thead>
                   <tr>
@@ -68,7 +90,7 @@ function Search() {
                 </tbody>
               </Table>
             </td>}
-            {shop2Sel && <td>
+            {shop2Sel && foodcityFound && <td>
               <Table striped bordered hover>
                 <thead>
                   <tr>
@@ -82,7 +104,7 @@ function Search() {
                 </tbody>
               </Table>
             </td>}
-            {shop3Sel && <td>
+            {shop3Sel && arpicoFound && <td>
               <Table striped bordered hover>
                 <thead>
                   <tr>
@@ -92,7 +114,7 @@ function Search() {
                   </tr>
                 </thead>
                 <tbody>
-                  <KeellsTable/>
+                  <ArpicoTable/>
                 </tbody>
               </Table>
             </td>}
@@ -143,8 +165,6 @@ function Search() {
           setMainData(res.data);
           if(mainData!=null){
             console.log("MainData SET!!");
-            let kdata=[]
-            kdata=mainData[0];
             // let size=kdata['size'];
             // console.log("MAIN ARRAY : "+mainData[0]);
             // setkeellsDataState(true);
@@ -190,15 +210,43 @@ function Search() {
       }else{
         let mainDict=mainData;
 
-        let s1dict=mainDict[1];
-        console.log("Shop1 size : "+s1dict['size']);
+        let s2dict=mainDict[1];
+        console.log("Shop2 size : "+s2dict['size']);
         // console.log("Size of list = "+itemDict['size']);
-        let dictSize=Number(s1dict['size']);
+        let dictSize=Number(s2dict['size']);
         let darray=[];
         for(let num=0;num<dictSize-1;num++){
           console.log("Item "+num.toString());
-          console.log(s1dict[num.toString()][0]);
-          darray.push(<tr key={num}><td key={num}>{s1dict[num.toString()][0]}</td><td>{s1dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s1dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          console.log(s2dict[num.toString()][0]);
+          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}</td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          // return(
+          //   <tr>
+          //     <td>{itemDict[num.toString()][0]}</td>
+          //     <td>{itemDict[num.toString()][1]}</td>
+          //   </tr>
+          // )
+        }
+        return darray;
+      }
+      
+    }
+
+
+    function ArpicoTable(){
+      if(mainData==null){
+        console.log("mainData IS NULL");
+      }else{
+        let mainDict=mainData;
+
+        let s2dict=mainDict[2];
+        console.log("Shop3 size : "+s2dict['size']);
+        // console.log("Size of list = "+itemDict['size']);
+        let dictSize=Number(s2dict['size']);
+        let darray=[];
+        for(let num=0;num<dictSize-1;num++){
+          console.log("Item "+num.toString());
+          console.log(s2dict[num.toString()][0]);
+          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}</td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
           // return(
           //   <tr>
           //     <td>{itemDict[num.toString()][0]}</td>
