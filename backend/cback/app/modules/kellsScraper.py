@@ -1,4 +1,5 @@
 from cgi import print_exception
+from optparse import check_choice
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -109,3 +110,4 @@ def checkFile():
     print("Driver file exists : "+str(cdriveloc))
 
 
+checkFile()

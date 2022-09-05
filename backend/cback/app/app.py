@@ -9,7 +9,7 @@ from modules import userManagement
 from flask import Flask, jsonify,request
 from flask_cors import CORS
 import pymongo
-import os
+from os.path import exists
 
 
 chrome_path=r"backend/cback/chromeWebdriver/chromedriver.exe"
@@ -109,3 +109,11 @@ def signup():
 
 app.run()
 
+# def checkFile():
+#     chrome_path=r"backend/cback/chromeWebdriver/chromedriver.exe"
+#     # chromeWebdriver/chromedriver.exe
+#     cdriveloc=exists(chrome_path)
+#     print("Driver file exists : "+str(cdriveloc))
+
+
+# checkFile()
