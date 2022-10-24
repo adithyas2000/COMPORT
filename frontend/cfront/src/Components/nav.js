@@ -6,12 +6,12 @@ function NavBar(){
     <div>
         <Navbar bg="dark" variant="dark">
         <Container>
-          <Navbar.Brand href="http://localhost:3000/">HOME</Navbar.Brand>
+          <Navbar.Brand href="/">HOME</Navbar.Brand>
           <Nav className="me-auto">
-            <Nav.Link href="http://localhost:3000/search">Search</Nav.Link>
-            <Nav.Link href="http://localhost:3000/testpage">Test Page</Nav.Link>
-            <Nav.Link href="http://localhost:3000/userWelcome">Login</Nav.Link>
-            <Nav.Link href="http://localhost:3000/userSignup">Signup</Nav.Link>
+            <Nav.Link href="/search">Search</Nav.Link>
+            <Nav.Link href="/testpage">Test Page</Nav.Link>
+            <Nav.Link href="/userWelcome">Login</Nav.Link>
+            <Nav.Link href="/userSignup">Signup</Nav.Link>
           </Nav>
         </Container>
       </Navbar>

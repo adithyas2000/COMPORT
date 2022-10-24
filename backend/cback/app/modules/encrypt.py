@@ -8,3 +8,4 @@ def encrypt(data:string):
     encoded=data.encode('utf-8')
     hashedData=bcrypt.hashpw(encoded,salt)
     return hashedData
+

@@ -4,9 +4,10 @@ import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import env from 'react-dotenv';
 
-const lhost = 'http://localhost:5000/';
-
+const lhost = env.LOCALHOST;
+console.log("ENV LHOST: "+lhost);
 
 
 function UserSignup() {
