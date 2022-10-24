@@ -1,5 +1,6 @@
 from cgi import print_exception
 from optparse import check_choice
+from typing import Any
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -37,10 +38,10 @@ def scrape(iname,path):
 
 
     time.sleep(2)
-    wlcBtn=driver.find_element(By.ID,'welcome_browse_btn')
+    # wlcBtn=driver.find_element(By.ID,'welcome_browse_btn')
 
     # saveSS()
-    wlcBtn.click()
+    # wlcBtn.click()
 
     # soup=BeautifulSoup(driver.page_source,'html.parser')
 
@@ -64,28 +65,35 @@ def scrape(iname,path):
 
         time.sleep(3)
 
-        items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name col-md-12"]')
+        items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name btn col-md-12"]')
         prices=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-final-price"]')
         images=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
+
+        # imageFiltered:Any
+        for image in images:
+            if((image.get_attribute("src").find("essstr.blob"))==-1):
+                print("Removing : "+image.get_attribute("src"))
+                images.remove(image)
         
-        # print("\n\n\nFound:\n")
-        # print(str(len(items)))
-        # print(str(len(prices)))
-        # for item in items:
-            # icheck=item.text.find("Keells")
-            # if(icheck!=-1):
-            #     print(item.text)
-            # else:
-            #     print("No items found")
-            # if(item.text!=""):
-            #     print(item.text)
+        print("\n\n\nFound:\n")
+        print(str(len(items)))
+        print(str(len(prices)))
+        print(str(len(images)))
+        for item in items:
+            icheck=item.text.find("Keells")
+            if(icheck!=-1):
+                print(item.text)
+            else:
+                print("No items found")
+            if(item.text!=""):
+                print(item.text)
 
         if(len(items)!=0):
             itemtxt=[]
             pricetxt=[]
             imgUrl=[]
             for i in range(len(items)):
-                imgUrl.append(images[i+1].get_attribute("src"))
+                imgUrl.append(images[i].get_attribute("src"))
                 # print(items[i].text+"  -  "+prices[i].text)
                 itemtxt.append(items[i].text)
                 pricetxt.append(prices[i].text)
