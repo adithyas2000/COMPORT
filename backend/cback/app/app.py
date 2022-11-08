@@ -1,20 +1,21 @@
 
 # from requests import request
 # import selenium
+import os
+from dotenv import load_dotenv
 from modules.User import User
-from modules import arpicoScraper as arpico
-from modules import kellsScraper as keells
-from modules import foodcityScraper as fcity
 from modules import search as SearchStore
 from modules import userManagement
+from modules import accountManager
 from flask import Flask, jsonify,request, session
 from flask_cors import CORS
 import pymongo
 from os.path import exists
 import flask_login
 
+load_dotenv()
 
-chrome_path=r"backend/cback/chromeWebdriver/chromedriver.exe"
+chrome_path=os.environ.get("CHROME_DRIVER")
 
 # Create data dictionary with list of items and size of list
 def getDataDict(dataobj):
@@ -68,23 +69,25 @@ def search():
 
 
         stext=request.args.get('sitem')
+
+        resultArray=SearchStore.mainSearch(shop1,shop2,shop3,stext)
         
-        keellsProdDict={"NULL":"NULL"}
-        if(shop1):
-            keellsProdDet=keells.scrape(stext,chrome_path)
-            keellsProdDict=getDataDict(keellsProdDet)
+        # keellsProdDict={"NULL":"NULL"}
+        # if(shop1):
+        #     keellsProdDet=keells.scrape(stext,chrome_path)
+        #     keellsProdDict=getDataDict(keellsProdDet)
 
-        fcProdDict={"NULL":"NULL"}
-        if(shop2):
-            fcProdDet=fcity.scrape(stext,chrome_path)
-            fcProdDict=getDataDict(fcProdDet)
+        # fcProdDict={"NULL":"NULL"}
+        # if(shop2):
+        #     fcProdDet=fcity.scrape(stext,chrome_path)
+        #     fcProdDict=getDataDict(fcProdDet)
 
-        arpicoProdDict={"NULL":"NULL"}
-        if(shop3):
-            arpicoDet=arpico.scrape(stext,chrome_path)
-            arpicoProdDict=getDataDict(arpicoDet)
-        finalDict=[keellsProdDict,fcProdDict,arpicoProdDict]
-        return jsonify(finalDict)
+        # arpicoProdDict={"NULL":"NULL"}
+        # if(shop3):
+        #     arpicoDet=arpico.scrape(stext,chrome_path)
+        #     arpicoProdDict=getDataDict(arpicoDet)
+        # finalDict=[keellsProdDict,fcProdDict,arpicoProdDict]
+        return jsonify(resultArray)
 
 @app.route('/logout/',methods=['GET','POST'])
 @flask_login.login_required
@@ -99,7 +102,7 @@ def user_load(email:str):
     resp=userManagement.getUser(email)
     user=User(resp['id'],resp['email'],"NREFRESHPASS",True)
     return user
-
+# ---------------------TEST ENDPOINTS--------------------------------
 @app.route('/testmongo/')
 def mongoConnect():
     
@@ -116,6 +119,37 @@ def mongoConnect():
     print(db)
     return 'LOL'
 
+@app.route('/getCurrentUser/')
+def getCUser():
+    return flask_login.current_user.get_email()
+@app.route('/addHistory/')
+@flask_login.login_required
+def gethdoc():
+    stext:str=request.args.get('sitem')
+    print("Adding "+stext)
+    hdoc=accountManager.addToSearchHistory(stext)
+    print((hdoc))
+    return hdoc 
+
+@app.route('/getHistory/')
+@flask_login.login_required
+def getHistory():
+    history=accountManager.getSearchHistory()
+    return history
+
+@app.route('/clearHistory/')
+@flask_login.login_required
+def clearHistory():
+    history=accountManager.clearSearchHistory()
+    return history
+
+@app.route('/deleteSpecHistory/')
+@flask_login.login_required
+def removeFromHistory():
+    timestamp:str=request.args.get('timestamp')
+    history=accountManager.removeFromSearchHistory(timestamp)
+    return history
+# ------------------------------------------------------------------------
 @app.route('/login/',methods=['POST'])
 def login():
     if(request.method=='POST'):
@@ -126,7 +160,7 @@ def login():
             return (res)
         user=User(res['id'],res['email'],password,True)
         loggedin=flask_login.login_user(user,force=True)
-        print(flask_login.current_user,"Auth",user.is_authenticated,"loggedin",loggedin,sep=" , ")
+        print(flask_login.current_user,"Auth:"+str(user.is_authenticated),"loggedin:"+str(loggedin),sep=" , ")
         
     print("Logging in...")
     

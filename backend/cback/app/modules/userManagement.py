@@ -67,3 +67,7 @@ def getUser(email:str):
     user=userCollection.find_one({"email":email})
     print(user["email"])
     return({"email":user['email'],"id":str(user['_id'])})
+
+def getLoggedinUser():
+    currentEmail:str=current_user.get_email()
+    return currentEmail
