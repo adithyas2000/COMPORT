@@ -7,6 +7,7 @@ from modules.User import User
 from modules import search as SearchStore
 from modules import userManagement
 from modules import accountManager
+from modules import keellsScraper as keels
 from flask import Flask, jsonify,request, session
 from flask_cors import CORS
 import pymongo
@@ -40,14 +41,8 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
 
-@app.route('/')
-def index():
-    return 'This is index.html'
 
-@app.route('/viewData/<int:val1>')
-def viewData(val1):
-    return f'This is view data page for {val1}'
-
+# ---------MAIN SEARCH----------------------------------------
 @flask_login.login_required
 @app.route('/search',methods=['GET','POST'])
 def search():
@@ -88,7 +83,8 @@ def search():
         #     arpicoProdDict=getDataDict(arpicoDet)
         # finalDict=[keellsProdDict,fcProdDict,arpicoProdDict]
         return jsonify(resultArray)
-
+# ----------------------------------------------------------------------
+# ----------------AUTHENTICATION----------------------------------------
 @app.route('/logout/',methods=['GET','POST'])
 @flask_login.login_required
 def logout():
@@ -102,7 +98,87 @@ def user_load(email:str):
     resp=userManagement.getUser(email)
     user=User(resp['id'],resp['email'],"NREFRESHPASS",True)
     return user
+
+@app.route('/login/',methods=['POST'])
+def login():
+    if(request.method=='POST'):
+        email=request.form["email"]
+        password=request.form["password"]
+        res=userManagement.login(email,password)
+        if("Error" in res):
+            return (res)
+        user=User(res['id'],res['email'],password,True)
+        loggedin=flask_login.login_user(user,force=True)
+        print(flask_login.current_user,"Auth:"+str(user.is_authenticated),"loggedin:"+str(loggedin),sep=" , ")
+        
+    print("Logging in...")
+    
+    return(res)
+
+@app.route('/signup/',methods=['POST'])
+def signup():
+    if(request.method=='POST'):
+        email=request.form["email"]
+        password=request.form["password"]
+        print("JSON:"+email+"--"+password)
+        resp=userManagement.signup(email,password)
+        return resp
+    else:
+        print("Not POST")
+# ------------------------------------------------------------------------
+
+# ---------HISTORY MANAGEMENT-----------------------
+@app.route('/deleteSpecHistory/')
+@flask_login.login_required
+def removeFromHistory():
+    timestamp:str=request.args.get('timestamp')
+    history=accountManager.removeFromSearchHistory(timestamp)
+    return history
+
+@app.route('/getHistory/')
+@flask_login.login_required
+def getHistory():
+    history=accountManager.getSearchHistory()
+    return history
+
+@app.route('/clearHistory/')
+@flask_login.login_required
+def clearHistory():
+    history=accountManager.clearSearchHistory()
+    return history
+# ---------------------------------------------------------
+# ---------------------FAVOURITES MANAGEMENT----------------
+@app.route('/addToFavs/')
+@flask_login.login_required
+def addtofavs():
+    prodName=request.args.get('prodname')
+    shop=request.args.get('shop')
+    res=accountManager.addToFavourites(prodName,shop)
+    return(res)
+
+@app.route('/getFavs/')
+@flask_login.login_required
+def getFavs():
+    res=accountManager.getAllFavs()
+    return res
+
+@app.route('/removeFromFavs/')
+@flask_login.login_required
+def removeFromFavs():
+    timestamp=request.args.get('timestamp')
+    res=accountManager.removeFromFavourites(timestamp)
+    return res
+# ------------------------------------------------------------
 # ---------------------TEST ENDPOINTS--------------------------------
+
+@app.route('/')
+def index():
+    return 'This is index.html'
+
+@app.route('/viewData/<int:val1>')
+def viewData(val1):
+    return f'This is view data page for {val1}'
+
 @app.route('/testmongo/')
 def mongoConnect():
     
@@ -131,51 +207,23 @@ def gethdoc():
     print((hdoc))
     return hdoc 
 
-@app.route('/getHistory/')
+@app.route('/addtoFav/')
 @flask_login.login_required
-def getHistory():
-    history=accountManager.getSearchHistory()
-    return history
+def addtofav():
+    iname:str=request.args.get('itemname')
+    price:str=request.args.get('price')
+    iurl:str=request.args.get('iurl')
+    purl:str=request.args.get('purl')
 
-@app.route('/clearHistory/')
-@flask_login.login_required
-def clearHistory():
-    history=accountManager.clearSearchHistory()
-    return history
+@app.route('/keellsitem/')
+def getkeellsitem():
+    item=request.args.get('itemtext')
+    res=keels.getItem(item,chrome_path)
+    return res
 
-@app.route('/deleteSpecHistory/')
-@flask_login.login_required
-def removeFromHistory():
-    timestamp:str=request.args.get('timestamp')
-    history=accountManager.removeFromSearchHistory(timestamp)
-    return history
+
 # ------------------------------------------------------------------------
-@app.route('/login/',methods=['POST'])
-def login():
-    if(request.method=='POST'):
-        email=request.form["email"]
-        password=request.form["password"]
-        res=userManagement.login(email,password)
-        if("Error" in res):
-            return (res)
-        user=User(res['id'],res['email'],password,True)
-        loggedin=flask_login.login_user(user,force=True)
-        print(flask_login.current_user,"Auth:"+str(user.is_authenticated),"loggedin:"+str(loggedin),sep=" , ")
-        
-    print("Logging in...")
-    
-    return(res)
 
-@app.route('/signup/',methods=['POST'])
-def signup():
-    if(request.method=='POST'):
-        email=request.form["email"]
-        password=request.form["password"]
-        print("JSON:"+email+"--"+password)
-        resp=userManagement.signup(email,password)
-        return resp
-    else:
-        print("Not POST")
 
 
 app.run()

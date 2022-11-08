@@ -117,5 +117,56 @@ def checkFile():
     cdriveloc=exists(chrome_path)
     print("Driver file exists : "+str(cdriveloc))
 
+def getItem(itemText:str,path:str):
+    chrome_path=path
+    driver=webdriver.Chrome(chrome_path,chrome_options=options)
+    driver.get('https://keellssuper.com/home')
+    # fnum=0
+    # fname=str(fnum)+'kss.png'
+    # fpath='/Users/Lenovo/Pictures/PythonSS/'+fname
+    # driver.save_screenshot('/Users/Lenovo/Pictures/PythonSS/lll.png')
+
+
+
+    time.sleep(2)
+    # wlcBtn=driver.find_element(By.ID,'welcome_browse_btn')
+
+    # saveSS()
+    # wlcBtn.click()
+
+    # soup=BeautifulSoup(driver.page_source,'html.parser')
+
+    # try1=driver.find_element(By.CLASS_NAME,'product-card-name')
+    print("\n\n\nReady...\n\n\n")
+
+    try:
+        elm=WebDriverWait(driver,10).until(EC.presence_of_element_located((By.CLASS_NAME,'product-card-name')))
+        # print(str(elm))
+    except:
+        print_exception("Error. Element not loaded/not found\n")
+    else:
+        searchitem=itemText
+        searchlink="https://keellssuper.com/product?cat=4&s=~"+searchitem
+        driver.get(searchlink)
+
+        time.sleep(3)
+
+        items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name btn col-md-12"]')
+
+        for item in items:
+            if(item.text==itemText):
+                item.click()
+                time.sleep(2)
+
+                itemurl=driver.current_url
+                print(itemurl)
+                return itemurl
+
+            else:
+                print("TEXT: "+item.text)
+
+        return 'done'
+    finally:
+        driver.close()
 
 checkFile()

@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from modules import arpicoScraper as arpico
-from modules import kellsScraper as keells
+from modules import keellsScraper as keells
 from modules import foodcityScraper as fcity
 from modules import accountManager
 
