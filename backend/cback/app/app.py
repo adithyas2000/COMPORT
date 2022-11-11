@@ -8,6 +8,8 @@ from modules import search as SearchStore
 from modules import userManagement
 from modules import accountManager
 from modules import keellsScraper as keels
+from modules import foodcityScraper as fcity
+from modules import arpicoScraper as arpico
 from flask import Flask, jsonify,request, session
 from flask_cors import CORS
 import pymongo
@@ -197,7 +199,10 @@ def mongoConnect():
 
 @app.route('/getCurrentUser/')
 def getCUser():
-    return flask_login.current_user.get_email()
+    if (flask_login.current_user.is_authenticated):
+        return {"Logged in as":flask_login.current_user.get_email()}
+    else:
+        return {"Error":"Not logged in"}
 @app.route('/addHistory/')
 @flask_login.login_required
 def gethdoc():
@@ -219,6 +224,17 @@ def addtofav():
 def getkeellsitem():
     item=request.args.get('itemtext')
     res=keels.getItem(item,chrome_path)
+    return res
+
+@app.route('/foodcityitem/')
+def getfcitem():
+    item=request.args.get('itemtext')
+    res=fcity.getItem(item,chrome_path)
+    return res
+@app.route('/arpicoitem/')
+def arpicoitem():
+    item=request.args.get('itemtext')
+    res=arpico.getItem(item,chrome_path)
     return res
 
 

@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import flask_login
 from modules import arpicoScraper as arpico
 from modules import keellsScraper as keells
 from modules import foodcityScraper as fcity
@@ -11,7 +12,8 @@ chrome_path=os.environ.get("CHROME_DRIVER")
 
 def mainSearch(shop1:bool,shop2:bool,shop3:bool,searchItem:str):
 
-    accountManager.addToSearchHistory(searchItem)
+    if(flask_login.current_user.is_authenticated):
+        accountManager.addToSearchHistory(searchItem)
 
     keellsProdDict={"NULL":"NULL"}
     if(shop1):

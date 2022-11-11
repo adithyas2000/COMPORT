@@ -74,6 +74,45 @@ def scrape(getitem,chrome_path):
     time.sleep(3)
     driver.quit()
 
-    
+def getItem(prodName:str,chrome_path):
+    driver=webdriver.Chrome(chrome_path,chrome_options=options)
+
+    # while True:
+    #     searchitem=input("What are you looking for ?")
+    #     if(searchitem!=""):
+    #         break
+
+    searchitem=prodName
+    split=searchitem.split('-')
+
+    concatStr:str=""
+    if(len(split)>1):
+        for n in range (0,len(split)-1):
+            print("Iter:"+str(n))
+            if (n==0):
+                concatStr=concatStr+split[n]
+            else:
+                concatStr=concatStr+"-"+split[n]
+        print(concatStr)
+
+    searchlink="https://cargillsonline.com/web/product?PS="+concatStr
+
+    # driver.get('https://cargillsonline.com/')
+    driver.get(searchlink)
+
+    time.sleep(3)
+
+    items=driver.find_elements(by=By.XPATH,value='//p[@class="ng-binding"]')
+
+    if(len(items)>0):
+        for item in items:
+            if(item.text==prodName):
+                item.click()
+                time.sleep(2)
+                itemurl=driver.current_url
+                return itemurl
+    else:
+        return {"Error":"No items"}
+        
 
 # scrape() #For testing only. Comment out in implementation

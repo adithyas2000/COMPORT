@@ -77,6 +77,32 @@ def scrape(getitem,chrome_path):
     time.sleep(3)
     driver.quit()
 
+def getItem(prodName:str,chrome_path:str):
+    driver=webdriver.Chrome(chrome_path,chrome_options=options)
+
+    # while True:
+    #     searchitem=input("What are you looking for ?")
+    #     if(searchitem!=""):
+    #         break
+
+    searchitem=str(prodName)
+
+    searchlink="https://arpicosupercentre.com/catalogsearch/result/?q="+searchitem
+
+    # driver.get('https://cargillsonline.com/')
+    driver.get(searchlink)
+
+    time.sleep(3)
+
+    items=driver.find_elements(by=By.XPATH,value='//a[@class="product-item-link"]')
+
+    if(len(items)>0):
+        for item in items:
+            if(item.text==prodName):
+                return item.get_attribute('href')
+    else:
+        return {"Error":"No matches"}
+
     
 #For testing only. Comment out in implementation
 # scrape('carrot',r"backend/cback/chromeWebdriver/chromedriver.exe") 

@@ -5,6 +5,8 @@ import pymongo
 from modules import userManagement
 from datetime import datetime
 from modules import keellsScraper as keells
+from modules import foodcityScraper as foodcity
+from modules import arpicoScraper as arpico
 
 
 load_dotenv()
@@ -95,18 +97,33 @@ def addToFavourites(productname:str,shop:str):
     loggedinuser=userManagement.getLoggedinUser()
     userDocs=db[loggedinuser]
     # Check if has a favs doc, if not create
-
+    itemurl:str=""
     if(shop=="keells"):
         itemurl=keells.getItem(productname,chrome_path)
         trimmedUrl=itemurl.split("keellssuper.com/")[1]
+    elif(shop=="foodcity"):
+        itemurl=foodcity.getItem(productname,chrome_path)
+    elif(shop=="arpico"):
+        itemurl=arpico.getItem(productname,chrome_path)
+        print(itemurl)
         
     try:
         favsDoc=userDocs.find_one(fav_filter)
         if(favsDoc==None):
             favDoc=userDocs.insert_one(fav_filter)
         time=datetime.now().isoformat(timespec='seconds')
-        favsUpdated=userDocs.update_one(fav_filter,{"$set":{time:itemurl}})
-        return {"Modified":str(favsUpdated.modified_count)}
+        currentFavs=getAllFavs()
+        duplicate:bool=False
+        for fav in currentFavs.values():
+            print(fav)
+            if(fav==itemurl):
+                duplicate=True
+                break
+        if(duplicate):
+            return {"Warn":"Duplicate"}
+        else:
+            favsUpdated=userDocs.update_one(fav_filter,{"$set":{time:itemurl}})
+            return {"Modified":str(favsUpdated.modified_count)}
     except Exception as e:
         print(str(e))
         return({"Error":str(e)})
