@@ -10,11 +10,10 @@ from modules import accountManager
 from modules import keellsScraper as keels
 from modules import foodcityScraper as fcity
 from modules import arpicoScraper as arpico
-from flask import Flask, jsonify,request, session
-from flask_cors import CORS
+from flask import Flask, jsonify, make_response,request, session
+from flask_cors import CORS, cross_origin
 import pymongo
 from os.path import exists
-import flask_login
 
 load_dotenv()
 
@@ -36,19 +35,17 @@ def getDataDict(dataobj):
 
 app=Flask(__name__)
 app.secret_key='comport secret'
-cors=CORS(app)
+CORS(app)
 
-login_manager = flask_login.LoginManager()
-
-login_manager.init_app(app)
-login_manager.login_view='login'
 
 
 # ---------MAIN SEARCH----------------------------------------
-@flask_login.login_required
-@app.route('/search',methods=['GET','POST'])
+@app.route('/search')
 def search():
+    
     if request.method == 'GET':
+        authToken=request.headers.get("Authorization")
+        print("Auth token: "+str(authToken))
         if(request.args.get('shop1').lower()=='true'):
             shop1=True
         else:
@@ -67,35 +64,26 @@ def search():
 
         stext=request.args.get('sitem')
 
-        resultArray=SearchStore.mainSearch(shop1,shop2,shop3,stext)
+        resultArray=SearchStore.mainSearch(shop1,shop2,shop3,stext,authToken)
+        response=make_response(jsonify(resultArray))
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
         
-        # keellsProdDict={"NULL":"NULL"}
-        # if(shop1):
-        #     keellsProdDet=keells.scrape(stext,chrome_path)
-        #     keellsProdDict=getDataDict(keellsProdDet)
+        response.status_code=200
+        return(response)
+    else:
+        return corsAllowHeaders()
 
-        # fcProdDict={"NULL":"NULL"}
-        # if(shop2):
-        #     fcProdDet=fcity.scrape(stext,chrome_path)
-        #     fcProdDict=getDataDict(fcProdDet)
-
-        # arpicoProdDict={"NULL":"NULL"}
-        # if(shop3):
-        #     arpicoDet=arpico.scrape(stext,chrome_path)
-        #     arpicoProdDict=getDataDict(arpicoDet)
-        # finalDict=[keellsProdDict,fcProdDict,arpicoProdDict]
-        return jsonify(resultArray)
 # ----------------------------------------------------------------------
 # ----------------AUTHENTICATION----------------------------------------
-@app.route('/logout/',methods=['GET','POST'])
-@flask_login.login_required
+@app.route('/logout/',methods=['GET','POST','OPTIONS'])
 def logout():
-    print("Logging out ",flask_login.current_user.is_authenticated,sep=" , ")
-    flask_login.logout_user()
-    print("Logging out ",flask_login.current_user.is_authenticated,sep=" , ")
+    print("Method : "+str(request.method))
+    print("Headers:"+str(request.headers.get("Authorization")))
+    authToken=request.headers.get("Authorization")
+    print("Auth token: "+str(authToken))
     return({"Logged out":"TRUE"})
 
-@login_manager.user_loader
+
 def user_load(email:str):
     resp=userManagement.getUser(email)
     user=User(resp['id'],resp['email'],"NREFRESHPASS",True)
@@ -110,12 +98,11 @@ def login():
         if("Error" in res):
             return (res)
         user=User(res['id'],res['email'],password,True)
-        loggedin=flask_login.login_user(user,force=True)
-        print(flask_login.current_user,"Auth:"+str(user.is_authenticated),"loggedin:"+str(loggedin),sep=" , ")
         
     print("Logging in...")
-    
-    return(res)
+    response=make_response(res)
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return(response)
 
 @app.route('/signup/',methods=['POST'])
 def signup():
@@ -131,45 +118,77 @@ def signup():
 
 # ---------HISTORY MANAGEMENT-----------------------
 @app.route('/deleteSpecHistory/')
-@flask_login.login_required
 def removeFromHistory():
-    timestamp:str=request.args.get('timestamp')
-    history=accountManager.removeFromSearchHistory(timestamp)
-    return history
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        timestamp:str=request.args.get('timestamp')
+        history=accountManager.removeFromSearchHistory(timestamp,authToken)
+        response=make_response(history)
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return(response)
+    else:
+        return ({"Error":"Log in to continue"})
 
 @app.route('/getHistory/')
-@flask_login.login_required
 def getHistory():
-    history=accountManager.getSearchHistory()
-    return history
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        history=accountManager.getSearchHistory(authToken)
+        return history
+    else:
+        return({"Error":"Log in to continue"})
 
 @app.route('/clearHistory/')
-@flask_login.login_required
 def clearHistory():
-    history=accountManager.clearSearchHistory()
-    return history
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        history=accountManager.clearSearchHistory(authToken)
+        return history
+    else:
+        return{"Error":"Log in to continue"}
 # ---------------------------------------------------------
 # ---------------------FAVOURITES MANAGEMENT----------------
 @app.route('/addToFavs/')
-@flask_login.login_required
 def addtofavs():
-    prodName=request.args.get('prodname')
-    shop=request.args.get('shop')
-    res=accountManager.addToFavourites(prodName,shop)
-    return(res)
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        prodName=request.args.get('prodname')
+        shop=request.args.get('shop')
+        res=accountManager.addToFavourites(prodName,shop,authToken)
+        return(res)
+    else:
+        return{"Error":"Log in to continue"}
 
 @app.route('/getFavs/')
-@flask_login.login_required
 def getFavs():
-    res=accountManager.getAllFavs()
-    return res
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        res=accountManager.getAllFavs(authToken)
+        return res
+    else:
+        return{"Error":"Log in to continue"}
 
 @app.route('/removeFromFavs/')
-@flask_login.login_required
 def removeFromFavs():
-    timestamp=request.args.get('timestamp')
-    res=accountManager.removeFromFavourites(timestamp)
-    return res
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        timestamp=request.args.get('timestamp')
+        res=accountManager.removeFromFavourites(timestamp,authToken)
+        return res
+    else:
+        return{"Error":"Log in to continue"}
 # ------------------------------------------------------------
 # ---------------------TEST ENDPOINTS--------------------------------
 
@@ -197,23 +216,27 @@ def mongoConnect():
     print(db)
     return 'LOL'
 
-@app.route('/getCurrentUser/')
-def getCUser():
-    if (flask_login.current_user.is_authenticated):
-        return {"Logged in as":flask_login.current_user.get_email()}
-    else:
-        return {"Error":"Not logged in"}
+# @app.route('/getCurrentUser/')
+# def getCUser():
+#     if (flask_login.current_user.is_authenticated):
+#         return {"Logged in as":flask_login.current_user.get_email()}
+#     else:
+#         return {"Error":"Not logged in"}
 @app.route('/addHistory/')
-@flask_login.login_required
 def gethdoc():
-    stext:str=request.args.get('sitem')
-    print("Adding "+stext)
-    hdoc=accountManager.addToSearchHistory(stext)
-    print((hdoc))
-    return hdoc 
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if(authToken!=None):
+        stext:str=request.args.get('sitem')
+        print("Adding "+stext)
+        hdoc=accountManager.addToSearchHistory(stext,authToken.replace("Bearer ",""))
+        print((hdoc))
+        return hdoc 
+    else:
+        return{"Error":"Login to continue"}
 
 @app.route('/addtoFav/')
-@flask_login.login_required
 def addtofav():
     iname:str=request.args.get('itemname')
     price:str=request.args.get('price')
@@ -239,7 +262,14 @@ def arpicoitem():
 
 
 # ------------------------------------------------------------------------
-
+def corsAllowHeaders():
+    print("\33[44mSending allow headers...\033[0m")
+    res=make_response()
+    res.access_control_allow_credentials=True
+    res.access_control_allow_credentials=True
+    res.access_control_allow_origin="*"
+    res.status_code=200
+    return res
 
 
 app.run()

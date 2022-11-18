@@ -7,10 +7,19 @@ import os
 from dotenv import load_dotenv
 from . import encrypt,User
 import bcrypt
+import jwt
 
 load_dotenv()
+try:
+    client = pymongo.MongoClient(os.environ.get("MONGO_URL"))
+except Exception as e:
+    print(e)
+    try:
+        client = pymongo.MongoClient(os.environ.get("MONGO_URL_ALT"))
+    except Exception as e2:
+        print(e2)
 
-client = pymongo.MongoClient(os.environ.get("MONGO_URL"))
+
 db=client["accounts"]
 userCollection=db["users"]
 
@@ -49,16 +58,20 @@ def signup(email:str,password:str):
 
 def login(email:str,password:str):
     validUser=userCollection.find_one({"email":email})
-    print(validUser['_id'])
-    # Comparing passwords
-    passw=validUser["password"]
-    
-    if bcrypt.checkpw(password.encode('utf-8'),passw):
-        print("Match")
-        return({"email":email,"id":str(validUser['_id'])})
+    if(validUser!=None):
+        print(validUser['_id'])
+        # Comparing passwords
+        passw=validUser["password"]
+        
+        if bcrypt.checkpw(password.encode('utf-8'),passw):
+            print("Match")
+            user_jwt=jwt.encode({"email":email,"type":"user"},os.environ.get('JWT_SECRET'))
+            return({"email":email,"id":str(validUser['_id']),"auth":user_jwt})
+        else:
+            print("No match")
+            return({"Error":"Failed to authorize"})
     else:
-        print("No match")
-        return({"Error":"Failed to authorize"})
+        return({"Error":"No account registered with the email"})
 
 def logout():
     logout_user()

@@ -15,8 +15,7 @@ function UserSignup() {
     const [password, setPassword] = useState("");
     const [confirmPass, setConfirmPass] = useState("");
     return (
-        <div style={{ alignItems: 'center' }}>
-            <div style={{ width: '50%', alignSelf: 'center' }}>
+            <div class="shadow-lg bg-white rounded p-5" style={{ width: '50%', alignSelf: 'center',marginLeft:'25%',marginTop:'10%'}}>
                 <Form id='loginForm' onSubmit={signup}>
                     <Form.Group className='mb-3' id='groupEmail'>
                         <Form.Label id='lblEmail'>Email</Form.Label>
@@ -32,10 +31,10 @@ function UserSignup() {
                     </Form.Group>
                     <Button variant='primary' type='submit'>Signup</Button>
                 </Form>
+                <br/>
                 <a href='/userWelcome'>Already have an account? Login</a>
 
             </div>
-        </div>
     )
 
     function signup(event) {
@@ -51,6 +50,9 @@ function UserSignup() {
                 form.append("password",password);
                 const res = axios.post(lhost + 'signup/',form).then(
                     resp=>{
+                        if("Error" in resp.data){
+                            alert(resp.data["Error"])
+                        }
                         console.log(resp.data)
                     }
                 )

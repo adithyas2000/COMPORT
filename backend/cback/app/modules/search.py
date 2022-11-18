@@ -10,10 +10,10 @@ load_dotenv()
 
 chrome_path=os.environ.get("CHROME_DRIVER")
 
-def mainSearch(shop1:bool,shop2:bool,shop3:bool,searchItem:str):
+def mainSearch(shop1:bool,shop2:bool,shop3:bool,searchItem:str,authToken):
 
-    if(flask_login.current_user.is_authenticated):
-        accountManager.addToSearchHistory(searchItem)
+    if(authToken!=None):
+        accountManager.addToSearchHistory(searchItem,authToken)
 
     keellsProdDict={"NULL":"NULL"}
     if(shop1):

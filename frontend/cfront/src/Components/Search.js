@@ -1,9 +1,10 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table'
 import axios from 'axios';
+import getAuthState from './authRender';
 
 const lhost='http://localhost:5000/';
 
@@ -53,7 +54,7 @@ function Search() {
 
   return (
     
-    <div id = 'container' style={{width:700,padding:50}}>
+    <div id = 'container' class="shadow-lg bg-white rounded p-5" style={{width:'80%',padding:50, marginLeft:'10%',marginTop:'5%'}}>
       <Form id='searchForm' onSubmit={formSubmit}>
         <Form.Group className='mb-3'>
           <Form.Check type='checkbox' id='shop1check' label={s1Name} defaultChecked={shop1Sel} onClick={e=>{onShopSelect(e.target.id)}}/>
@@ -62,7 +63,7 @@ function Search() {
         </Form.Group>
         <Form.Group className='mb-3' controlId='searchText'>
           <Form.Label>Search for an item</Form.Label>
-          <Form.Control type='text' required onChange={e=>{onStextChange(e.target.value)}}/>
+          <Form.Control style={{width:'50%'}} type='text' required onChange={e=>{onStextChange(e.target.value)}}/>
         </Form.Group>
         <Button variant='primary' type='submit'>Search</Button>
       </Form>
@@ -158,7 +159,7 @@ function Search() {
     }
     function formSubmit(event){
     event.preventDefault();
-    axios.get(lhost+'search?sitem='+stext+'&shop1='+shop1Sel+"&shop2="+shop2Sel+"&shop3="+shop3Sel)
+    axios.get(lhost+'search?sitem='+stext+'&shop1='+shop1Sel+"&shop2="+shop2Sel+"&shop3="+shop3Sel, { headers: { "Authorization": window.sessionStorage.getItem("auth") } })
         .then(res=>{
           let jsonstr=JSON.stringify(res.data);
           console.log("AXIOS: "+jsonstr);
@@ -190,7 +191,7 @@ function Search() {
         for(let num=0;num<dictSize-1;num++){
           console.log("Item "+num.toString());
           console.log(s1dict[num.toString()][0]);
-          darray.push(<tr key={num}><td width={200} key={num}>{s1dict[num.toString()][0]}</td><td>{s1dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s1dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          darray.push(<tr key={num}><td width={200} key={num}>{s1dict[num.toString()][0]}{getAuthState() && <Button onClick={(e)=>{testItemNames(e)}} variant='primary' style={{width:"150px"}}>Add to favs</Button>}</td><td>{s1dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s1dict[num.toString()][2]} width="150" height="150"/></td></tr>);
           // return(
           //   <tr>
           //     <td>{itemDict[num.toString()][0]}</td>
@@ -202,6 +203,11 @@ function Search() {
       }
       
     }
+    function testItemNames(e){
+      e.preventDefault();
+      console.log("Fav btn: ");
+      console.log(e.target.parentNode.textContent);
+    }
 
 
     function FoodcityTable(){
@@ -209,16 +215,16 @@ function Search() {
         console.log("mainData IS NULL");
       }else{
         let mainDict=mainData;
-
+        // Foodcity is 2nd shop so get dictionary @ 2nd index
         let s2dict=mainDict[1];
         console.log("Shop2 size : "+s2dict['size']);
         // console.log("Size of list = "+itemDict['size']);
         let dictSize=Number(s2dict['size']);
         let darray=[];
-        for(let num=0;num<dictSize-1;num++){
+        for(let num=0;num<dictSize;num++){
           console.log("Item "+num.toString());
           console.log(s2dict[num.toString()][0]);
-          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}</td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}<Button variant='primary' style={{width:"150px"}} onClick={e=>addToFavs(e,"keells")}>Add to favs</Button></td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
           // return(
           //   <tr>
           //     <td>{itemDict[num.toString()][0]}</td>
@@ -257,6 +263,15 @@ function Search() {
         return darray;
       }
       
+    }
+
+    function addToFavs(e,shop){
+      var prodName=e.target.parentNode.textContent
+      console.log(e.target.parentNode.textContent)
+      axios.get(lhost+"addToFavs/?prodname="+prodName+"&shop="+shop)
+      .then(
+        res=>console.log("Add to fav return:"+JSON.stringify(res.data))
+      )
     }
 }
 

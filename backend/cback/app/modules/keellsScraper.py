@@ -94,7 +94,6 @@ def scrape(iname,path):
             imgUrl=[]
             for i in range(len(items)):
                 imgUrl.append(images[i].get_attribute("src"))
-                # print(items[i].text+"  -  "+prices[i].text)
                 itemtxt.append(items[i].text)
                 pricetxt.append(prices[i].text)
 
@@ -152,18 +151,35 @@ def getItem(itemText:str,path:str):
         time.sleep(3)
 
         items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name btn col-md-12"]')
-
+        images=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
+        # imageFiltered:Any
+        for image in images:
+            if((image.get_attribute("src").find("essstr.blob"))==-1):
+                print("Removing : "+image.get_attribute("src"))
+                images.remove(image)
+        length=len(items)
+        ind=0
         for item in items:
             if(item.text==itemText):
+                itemDetails={}
+                
+
+                prodImage=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
+
+                itemDetails["Image"]=images[ind].get_attribute("src")
+                print("Images : "+str(len(images))+" Items: "+str(len(items)))
                 item.click()
-                time.sleep(2)
+                time.sleep(5)
 
                 itemurl=driver.current_url
-                print(itemurl)
-                return itemurl
+
+                itemDetails["URL"]=itemurl
+                itemDetails["name"]=itemText
+                return itemDetails
 
             else:
                 print("TEXT: "+item.text)
+            ind=ind+1
 
         return 'done'
     finally:

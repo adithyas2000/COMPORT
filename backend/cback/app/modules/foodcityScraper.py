@@ -1,18 +1,16 @@
+import time
 from cgi import print_exception
-from typing import List
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
+
 import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 # from bs4 import BeautifulSoup
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-
-
-
 
 options=webdriver.ChromeOptions()
+# ----Uncomment the following line to hide browser window (Headless mode)----
 # options.add_argument('headless')
 
 
@@ -20,20 +18,23 @@ options=webdriver.ChromeOptions()
 def scrape(getitem,chrome_path):
     driver=webdriver.Chrome(chrome_path,chrome_options=options)
 
-    # while True:
-    #     searchitem=input("What are you looking for ?")
-    #     if(searchitem!=""):
-    #         break
-
     searchitem=str(getitem)
 
     searchlink="https://cargillsonline.com/web/product?PS="+searchitem
 
-    # driver.get('https://cargillsonline.com/')
+    # search does not work if hoempage is not visited
+    driver.get('https://cargillsonline.com/')
+    time.sleep(5)
     driver.get(searchlink)
 
-    time.sleep(3)
+    # wait for items to load
+    wait=WebDriverWait(driver,15)
+    itemVisible=wait.until(EC.visibility_of_element_located((By.XPATH,'//p[@class="ng-binding"]')),"Element item name loading timeout")
+    
+    # Scroll till bottom to load all elements
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
 
+    # Get references to WebElements
     items=driver.find_elements(by=By.XPATH,value='//p[@class="ng-binding"]')
     prices=driver.find_elements(by=By.XPATH,value='//h4[@class="txtSmall ng-binding"]')
     images=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
@@ -54,7 +55,7 @@ def scrape(getitem,chrome_path):
         for i in range(len(items)):
             # print(items[i].text+" - "+prices[i].text)
             # imgilst.append(images[i].get_attribute("src"))
-            itemtxt.append(items[i].text)
+            itemtxt.append(items[i].get_attribute('title'))
             pricetxt.append(prices[i].text)
 
         class details:
@@ -97,7 +98,8 @@ def getItem(prodName:str,chrome_path):
 
     searchlink="https://cargillsonline.com/web/product?PS="+concatStr
 
-    # driver.get('https://cargillsonline.com/')
+    driver.get("https://cargillsonline.com/web/")
+    time.sleep(5)
     driver.get(searchlink)
 
     time.sleep(3)

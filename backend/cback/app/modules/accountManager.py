@@ -1,12 +1,15 @@
 import os
 from dotenv import load_dotenv
 from flask_login import current_user
+import jwt
 import pymongo
 from modules import userManagement
 from datetime import datetime
 from modules import keellsScraper as keells
 from modules import foodcityScraper as foodcity
 from modules import arpicoScraper as arpico
+
+from modules import jwtDecode
 
 
 load_dotenv()
@@ -21,8 +24,10 @@ db=client["users"]
 
 
 
-def addToSearchHistory(historyItem:str):
-    loggedinuser=userManagement.getLoggedinUser()
+def addToSearchHistory(historyItem:str,token:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     try:
         historyDoc=userDocs.find_one(history_filter)
@@ -46,8 +51,10 @@ def addToSearchHistory(historyItem:str):
         print(e)
         return("ERROR : "+str(e))
 
-def removeFromSearchHistory(item:str):
-    loggedinuser=userManagement.getLoggedinUser()
+def removeFromSearchHistory(item:str,token:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     try:
         historyDoc=userDocs.find_one(history_filter)
@@ -59,8 +66,10 @@ def removeFromSearchHistory(item:str):
         print(str(e))
         return({"Error":str(e)})
 
-def clearSearchHistory():
-    loggedinuser=userManagement.getLoggedinUser()
+def clearSearchHistory(token:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     try:
         deletedoc=userDocs.delete_one(history_filter)
@@ -70,8 +79,11 @@ def clearSearchHistory():
         print(str(e))
         return({"Error":str(e)})
 
-def getSearchHistory():
-    loggedinuser=userManagement.getLoggedinUser()
+def getSearchHistory(token:str):
+    print("Token at getSearchHistory : "+token)
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     try:
         fullHistory=userDocs.find_one(history_filter)
@@ -93,19 +105,20 @@ def getSearchHistory():
         print("ERROR : "+str(e))
         return({"Error":str(e)})
 
-def addToFavourites(productname:str,shop:str):
-    loggedinuser=userManagement.getLoggedinUser()
+def addToFavourites(productname:str,shop:str,token:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     # Check if has a favs doc, if not create
     itemurl:str=""
     if(shop=="keells"):
         itemurl=keells.getItem(productname,chrome_path)
-        trimmedUrl=itemurl.split("keellssuper.com/")[1]
     elif(shop=="foodcity"):
         itemurl=foodcity.getItem(productname,chrome_path)
     elif(shop=="arpico"):
         itemurl=arpico.getItem(productname,chrome_path)
-        print(itemurl)
+    print("ItemURL:"+str(itemurl))
         
     try:
         favsDoc=userDocs.find_one(fav_filter)
@@ -130,8 +143,10 @@ def addToFavourites(productname:str,shop:str):
         
 
 
-def removeFromFavourites(timestamp:str):
-    loggedinuser=userManagement.getLoggedinUser()
+def removeFromFavourites(timestamp:str,token:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     try:
         favDoc=userDocs.find_one(fav_filter)
@@ -143,20 +158,22 @@ def removeFromFavourites(timestamp:str):
     except Exception as e:
         return {"Error":str(e)}
 
-def getAllFavs():
-    loggedinuser=userManagement.getLoggedinUser()
+def getAllFavs(token:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     try:
-        favDoc=userDocs.find_one(fav_filter)
+        favDoc:dict=userDocs.find_one(fav_filter)
         if(favDoc!=None):
             favDict={}
             n:int=1
-            for item in favDoc:
+            for item in favDoc.values():
                 if(n>2):
-                    favDict[str(item)]=str(favDoc[item])
-                    print("Item "+str(n-2)+" : "+str(favDoc[item]))
+                    favDict[str(n-2)]=item
+                    print("Item "+str(n-2)+" : "+str(item))
                 else:
-                    print(str(item)+" : "+str(favDoc[item]))
+                    print(str(item)+" : "+str(item))
                 n=n+1
             return favDict
     except Exception as e:
