@@ -191,7 +191,7 @@ function Search() {
         for(let num=0;num<dictSize-1;num++){
           console.log("Item "+num.toString());
           console.log(s1dict[num.toString()][0]);
-          darray.push(<tr key={num}><td width={200} key={num}>{s1dict[num.toString()][0]}{getAuthState() && <Button onClick={(e)=>{testItemNames(e)}} variant='primary' style={{width:"150px"}}>Add to favs</Button>}</td><td>{s1dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s1dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          darray.push(<tr key={num}><td width={200} key={num}>{s1dict[num.toString()][0]}{getAuthState() && <Button id='keells' onClick={(e)=>{addToFavs(e)}} variant='primary' style={{width:"150px"}}>Add to favs</Button>}</td><td>{s1dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s1dict[num.toString()][2]} width="150" height="150"/></td></tr>);
           // return(
           //   <tr>
           //     <td>{itemDict[num.toString()][0]}</td>
@@ -203,10 +203,32 @@ function Search() {
       }
       
     }
-    function testItemNames(e){
+    function addToFavs(e){
       e.preventDefault();
-      console.log("Fav btn: ");
-      console.log(e.target.parentNode.textContent);
+      var itemName="";
+      itemName=e.target.parentNode.textContent;
+      console.log("Fav item: "+itemName.replace("Add to favs",""));
+      var itemPrice=e.target.parentNode.nextSibling.textContent;
+      var imageUrl=e.target.parentNode.nextSibling.nextSibling.childNodes["0"].src;
+      var shop=e.target.id;
+
+      axios.get(lhost+"addToFavs/?prodname="+itemName.replace("Add to favs","")+"&shop="+shop,{headers:{"Authorization":window.sessionStorage.getItem("auth")}}).then(
+        res=>{
+          if("Error" in res.data){
+            alert(res.data["Error"]);
+          }else if("Warn" in res.data){
+            alert(res.data["Warn"]);
+          }else if("Modified" in res.data){
+            var modCount=0;
+            modCount=res.data["Modified"];
+            if(modCount>0){
+              alert("Added to favoutires");
+            }else{
+              alert("Modified : "+modCount);
+            }
+          }
+        }
+      )
     }
 
 
@@ -224,7 +246,7 @@ function Search() {
         for(let num=0;num<dictSize;num++){
           console.log("Item "+num.toString());
           console.log(s2dict[num.toString()][0]);
-          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}<Button variant='primary' style={{width:"150px"}} onClick={e=>addToFavs(e,"keells")}>Add to favs</Button></td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}<Button id='foodcity' variant='primary' style={{width:"150px"}} onClick={e=>addToFavs(e)}>Add to favs</Button></td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
           // return(
           //   <tr>
           //     <td>{itemDict[num.toString()][0]}</td>
@@ -252,7 +274,7 @@ function Search() {
         for(let num=0;num<dictSize-1;num++){
           console.log("Item "+num.toString());
           console.log(s2dict[num.toString()][0]);
-          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}</td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
+          darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}<Button id='arpico' variant='primary' style={{width:"150px"}} onClick={e=>addToFavs(e)}>Add to favs</Button></td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150"/></td></tr>);
           // return(
           //   <tr>
           //     <td>{itemDict[num.toString()][0]}</td>
@@ -265,14 +287,14 @@ function Search() {
       
     }
 
-    function addToFavs(e,shop){
-      var prodName=e.target.parentNode.textContent
-      console.log(e.target.parentNode.textContent)
-      axios.get(lhost+"addToFavs/?prodname="+prodName+"&shop="+shop)
-      .then(
-        res=>console.log("Add to fav return:"+JSON.stringify(res.data))
-      )
-    }
+    // function addToFavs(e,shop){
+    //   var prodName=e.target.parentNode.textContent
+    //   console.log(e.target.parentNode.textContent)
+    //   axios.get(lhost+"addToFavs/?prodname="+prodName+"&shop="+shop)
+    //   .then(
+    //     res=>console.log("Add to fav return:"+JSON.stringify(res.data))
+    //   )
+    // }
 }
 
 export default Search;

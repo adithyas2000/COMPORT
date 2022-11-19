@@ -125,7 +125,7 @@ def addToFavourites(productname:str,shop:str,token:str):
         if(favsDoc==None):
             favDoc=userDocs.insert_one(fav_filter)
         time=datetime.now().isoformat(timespec='seconds')
-        currentFavs=getAllFavs()
+        currentFavs=getAllFavs(token)
         duplicate:bool=False
         for fav in currentFavs.values():
             print(fav)
@@ -168,12 +168,12 @@ def getAllFavs(token:str):
         if(favDoc!=None):
             favDict={}
             n:int=1
-            for item in favDoc.values():
+            for item in favDoc:
                 if(n>2):
-                    favDict[str(n-2)]=item
-                    print("Item "+str(n-2)+" : "+str(item))
+                    favDict[item]=favDoc[item]
+                    print("Item "+str(n-2)+" : "+str(favDoc[item]))
                 else:
-                    print(str(item)+" : "+str(item))
+                    print(str(item)+" : "+str(favDoc[item]))
                 n=n+1
             return favDict
     except Exception as e:

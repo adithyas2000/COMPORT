@@ -145,6 +145,7 @@ def getItem(itemText:str,path:str):
         print_exception("Error. Element not loaded/not found\n")
     else:
         searchitem=itemText
+        print("Searching for item : "+itemText)
         searchlink="https://keellssuper.com/product?cat=4&s=~"+searchitem
         driver.get(searchlink)
 

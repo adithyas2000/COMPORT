@@ -105,14 +105,26 @@ def getItem(prodName:str,chrome_path):
     time.sleep(3)
 
     items=driver.find_elements(by=By.XPATH,value='//p[@class="ng-binding"]')
+    images=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
+    imglist=[]
+    for i in range(len(images)):
+        url = images[i].get_attribute("src")
+        if((url.find("VendorItems")!=-1)or(url.find("loading_img1")!=-1)):
+            imglist.append(images[i].get_attribute("src"))
+    print("Filtered images "+str(len(imglist)))
 
     if(len(items)>0):
+        ind=0
         for item in items:
             if(item.text==prodName):
                 item.click()
                 time.sleep(2)
-                itemurl=driver.current_url
+                itemurl={}
+                itemurl["URL"]=driver.current_url
+                itemurl["name"]=prodName
+                itemurl["Image"]=imglist[ind]
                 return itemurl
+            ind=ind+1
     else:
         return {"Error":"No items"}
         

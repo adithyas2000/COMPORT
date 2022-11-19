@@ -263,7 +263,7 @@ def arpicoitem():
 
 # ------------------------------------------------------------------------
 def corsAllowHeaders():
-    print("\33[44mSending allow headers...\033[0m")
+    print("Sending allow headers...")
     res=make_response()
     res.access_control_allow_credentials=True
     res.access_control_allow_credentials=True
