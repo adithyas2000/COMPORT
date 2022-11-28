@@ -31,7 +31,7 @@ function NavBar() {
           <Nav className="me-auto">
             <Nav.Link href='/'><h3 style={{ color: '#4da6ff' }}>Comport</h3></Nav.Link>
             <Nav.Link href="/search">Search</Nav.Link>
-            <Nav.Link href="/testpage">Test Page</Nav.Link>
+            {/* <Nav.Link href="/testpage">Test Page</Nav.Link> */}
             {!getAuthState() && <Nav.Link href="/userWelcome">Login</Nav.Link>}
             {!getAuthState() && <Nav.Link href="/userSignup">Signup</Nav.Link>}
             {getAuthState() && <Nav.Link href="/favourites">Favourites</Nav.Link>}

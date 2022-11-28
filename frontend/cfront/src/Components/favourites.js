@@ -18,6 +18,7 @@ function Favourites(){
 
     return(
         <div id='mainContainer' class="border border-5 border-primary shadow bg-white p-5" style={{ width: '80%', padding: 50, margin:'10%', borderRadius: 50 }}>
+            <h1>Favourites</h1><br/>
             <Table striped bordered hover id='resTable'>
         <thead style={{width: "200"}}>
           <tr>{  <th>Keells</th>}{<th>Food City</th>}{arpicoData.length>0 &&  <th>Arpico</th>}</tr>
