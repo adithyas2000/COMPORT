@@ -31,6 +31,10 @@ function Search() {
 
   const [spinning, setspinning] = useState(false);
 
+  const [keellsSortDir, setKeellsSortDir] = useState(false);
+  const [foodcitySortDir, setFoodcitySortDir] = useState(false);
+  const [arpicoSortDir, setArpicoSortDir] = useState(false);
+
   useEffect(() => {
 
     if (mainData != null) {
@@ -88,7 +92,7 @@ function Search() {
       <Table striped bordered hover id='resTable'>
         <thead style={{ width: "200" }}>
           <tr>{shop1Sel && keelsFound && <th>Keells</th>}{shop2Sel && foodcityFound && <th>Food City</th>}{shop3Sel && arpicoFound && <th>Arpico</th>}</tr>
-          <tr>{shop1Sel && keelsFound && <td><Button onClick={(e)=>{e.preventDefault(); sortTable("keells");}}>Sort</Button></td>}{shop2Sel && foodcityFound && <td><Button onClick={(e)=>{e.preventDefault(); sortTable("foodcity");}}>Sort</Button></td>}{shop3Sel && arpicoFound && <td><Button onClick={(e)=>{e.preventDefault(); sortTable("arpico");}}>Sort</Button></td>}</tr>
+          <tr>{shop1Sel && keelsFound && <td><Button onClick={(e) => { e.preventDefault(); sortTable("keells"); }}>Sort{keellsSortDir && <div>▲</div>}{!keellsSortDir && <div>▼</div>}</Button></td>}{shop2Sel && foodcityFound && <td><Button onClick={(e) => { e.preventDefault(); sortTable("foodcity"); }}>Sort{foodcitySortDir && <div>▲</div>}{!foodcitySortDir && <div>▼</div>}</Button></td>}{shop3Sel && arpicoFound && <td><Button onClick={(e) => { e.preventDefault(); sortTable("arpico"); }}>Sort{arpicoSortDir && <div>▲</div>}{!arpicoSortDir && <div>▼</div>}</Button></td>}</tr>
         </thead>
 
         <tbody>
@@ -170,10 +174,10 @@ function Search() {
         shopList = mainData[2];
         break;
       default:
-        console.log("No shop matching '"+shopname+"'");
+        console.log("No shop matching '" + shopname + "'");
         break;
     }
-    shopList = mainData[0];
+    // shopList = mainData[0];
     var ksize = Number(shopList["size"]);
 
     var lis = { "0": ["ITEM", "Rs 29,9 /", "https://reactjs.org/logo-og.png"], "1": ["ITEM1", "Rs 2,91 /", "https://reactjs.org/logo-og.png"], "2": ["ITEM2", "Rs 2,95 /", "https://reactjs.org/logo-og.png"], "size": 4 };
@@ -186,28 +190,65 @@ function Search() {
 
       let priceFull = ["", ""];
       let price = [0, 0]
-      let pricesplt = ["", ""];
+      let pricesplit = ["", ""];
 
-      priceFull[0] = a[1];
-      console.log("PRICE FULL A: " + priceFull[0]);
-      if (priceFull[0].includes(" ")) {
-        pricesplt[0] = priceFull[0].split(" ")[1].replace(",", "");
-      } else {
-        pricesplt[0] = priceFull[0].split(" ")[0].replace(",", "");
+      if (shopname == "keells") {
+        console.log("Sorting keells");
+        priceFull[0] = a[1];
+        console.log("PRICE FULL A: " + priceFull[0]);
+        if (priceFull[0].includes(" ")) {
+          pricesplit[0] = priceFull[0].split(" ")[1].replace(",", "");
+        } else {
+          pricesplit[0] = priceFull[0].split(" ")[0].replace(",", "");
+        }
+        pricesplit[0] = priceFull[0].split(" ")[1].replace(",", "");
+        price[0] = parseFloat(pricesplit[0]);
+
+        priceFull[1] = b[1];
+        if (priceFull[1].includes(" ")) {
+          pricesplit[1] = priceFull[1].split(" ")[1].replace(",", "");
+        } else {
+          pricesplit[1] = priceFull[1].split(" ")[0].replace(",", "");
+        }
+        price[1] = parseFloat(pricesplit[1]);
+        // console.log(price);
+        if(keellsSortDir){
+          return (price[1] - price[0]);
+        }else{
+          return (price[0] - price[1]);
+        }
+        
+      } else if (shopname == "foodcity") {
+        priceFull[0] = a[1];
+        pricesplit[0] = priceFull[0].split(" ")[1].replace(",", "");
+        price[0] = parseFloat(pricesplit[0]);
+
+        priceFull[1] = b[1];
+        pricesplit[1] = priceFull[1].split(" ")[1].replace(",", "");
+        price[1] = parseFloat(pricesplit[1]);
+
+        if(foodcitySortDir){
+          return (price[1] - price[0]);
+        }else{
+          return (price[0] - price[1]);
+        }
+      } else if (shopname == "arpico") {
+        priceFull[0] = a[1];
+        pricesplit[0] = priceFull[0].replace("LKR", "").replace(",", "");
+        price[0] = parseFloat(pricesplit[0]);
+
+        priceFull[1] = b[1];
+        pricesplit[1] = priceFull[1].replace("LKR", "").replace(",", "");
+        console.log("Arpico Price:" + pricesplit[0] - pricesplit[1]);
+        price[1] = parseFloat(pricesplit[1]);
+
+        if(arpicoSortDir){
+          return (price[1] - price[0]);
+        }else{
+          return (price[0] - price[1]);
+        }
       }
-      pricesplt[0] = priceFull[0].split(" ")[1].replace(",", "");
-      price[0] = parseFloat(pricesplt[0]);
 
-      priceFull[1] = b[1];
-      if (priceFull[1].includes(" ")) {
-        pricesplt[1] = priceFull[1].split(" ")[1].replace(",", "");
-      } else {
-        pricesplt[1] = priceFull[1].split(" ")[0].replace(",", "");
-      }
-      price[1] = parseFloat(pricesplt[1]);
-      // console.log(price);
-
-      return (price[0] - price[1]);
     });
     var sortedList = {};
     for (let n = 0; n < arr.length; n++) {
@@ -217,15 +258,18 @@ function Search() {
     switch (shopname) {
       case "keells":
         setkeellsdata(sortedList);
+        setKeellsSortDir(!keellsSortDir);
         break;
       case "foodcity":
         setfoodcitydata(sortedList);
+        setFoodcitySortDir(!foodcitySortDir);
         break;
       case "arpico":
         setarpicodata(sortedList);
+        setArpicoSortDir(!arpicoSortDir);
         break;
       default:
-        console.log("No shop matching '"+shopname+"'");
+        console.log("No shop matching '" + shopname + "'");
         break;
     }
     console.log(sortedList);
@@ -312,7 +356,7 @@ function Search() {
     var imageUrl = e.target.parentNode.nextSibling.nextSibling.childNodes["0"].src;
     var shop = e.target.id;
 
-    axios.get(lhost + "addToFavs/?prodname=" + encodeURIComponent(itemName.replace("Add to favs", "")) + "&shop=" + encodeURIComponent(shop)+"&price="+encodeURIComponent(itemPrice), { headers: { "Authorization": window.sessionStorage.getItem("auth") } }).then(
+    axios.get(lhost + "addToFavs/?prodname=" + encodeURIComponent(itemName.replace("Add to favs", "")) + "&shop=" + encodeURIComponent(shop) + "&price=" + encodeURIComponent(itemPrice), { headers: { "Authorization": window.sessionStorage.getItem("auth") } }).then(
       res => {
         if ("Error" in res.data) {
           alert(res.data["Error"]);
@@ -340,7 +384,7 @@ function Search() {
       for (let num = 0; num < dictSize; num++) {
         console.log("Item " + num.toString());
         console.log(s2dict[num.toString()][0]);
-        darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}{getAuthState() && <Button id='foodcity' variant='primary' style={{ width: "150px" }} onClick={e => addToFavs(e)}>Add to favs</Button>}</td><td>{s2dict[num.toString()][1]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150" /></td></tr>);
+        darray.push(<tr key={num}><td key={num}>{s2dict[num.toString()][0]}{getAuthState() && <Button id='foodcity' variant='primary' style={{ width: "150px" }} onClick={e => addToFavs(e)}>Add to favs</Button>}</td><td>{s2dict[num.toString()][1].split("MRP")[0]}</td><td><img className='prodimg' alt='Product' src={s2dict[num.toString()][2]} width="150" height="150" /></td></tr>);
         // return(
         //   <tr>
         //     <td>{itemDict[num.toString()][0]}</td>
@@ -358,9 +402,9 @@ function Search() {
     if (mainData == null) {
       console.log("mainData IS NULL");
     } else {
-      let mainDict = mainData;
+      // let mainDict = mainData;
 
-      let s2dict = mainDict[2];
+      let s2dict = arpicodata;
       console.log("Shop3 size : " + s2dict['size']);
       // console.log("Size of list = "+itemDict['size']);
       let dictSize = Number(s2dict['size']);

@@ -58,13 +58,19 @@ function UserSignup() {
                     resp => {
                         setspinning(false);
                         if ("Error" in resp.data) {
-                            alert(resp.data["Error"])
+                            alert(resp.data["Error"]);
                         }
-                        console.log(resp.data)
+                        console.log(resp.data);
+                        if(resp.data["email"]){
+                            alert("Signed up successfully");
+                            window.location.href='/userWelcome';
+                        }
+                        setspinning(false);
                     }
                 )
             } else {
                 alert("Passwords do not match or is empty");
+                setspinning(false);
             }
 
         } catch (err) {

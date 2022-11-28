@@ -27,8 +27,9 @@ function NavBar() {
 
       <Navbar bg="dark" variant="dark">
         <Container>
-          <Navbar.Brand href="/"><h1 style={{ color: '#4da6ff' }}>Comport</h1></Navbar.Brand>
+          <Navbar.Brand href="/"><img id='logo' src={require('../logos/logo1.jpeg')}/></Navbar.Brand>
           <Nav className="me-auto">
+            <Nav.Link href='/'><h3 style={{ color: '#4da6ff' }}>Comport</h3></Nav.Link>
             <Nav.Link href="/search">Search</Nav.Link>
             <Nav.Link href="/testpage">Test Page</Nav.Link>
             {!getAuthState() && <Nav.Link href="/userWelcome">Login</Nav.Link>}
