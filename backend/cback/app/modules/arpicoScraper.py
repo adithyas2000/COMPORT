@@ -99,7 +99,19 @@ def getItem(prodName:str,chrome_path:str):
     if(len(items)>0):
         for item in items:
             if(item.text==prodName):
-                return item.get_attribute('href')
+                itemdata={}
+                itemdata["name"]=item.text
+
+                item.click()
+                time.sleep(3)
+
+                price=driver.find_elements(by=By.XPATH,value='//span[@class="price"]')[1]
+                image=driver.find_element(by=By.XPATH,value='//img[@class="fotorama__img"]')
+                itemdata["image"]=image.get_attribute('src')
+                itemdata["price"]=price.text
+                itemdata["URL"]=driver.current_url
+                return itemdata
+                
     else:
         return {"Error":"No matches"}
 

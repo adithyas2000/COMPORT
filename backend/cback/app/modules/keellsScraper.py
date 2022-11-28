@@ -64,6 +64,16 @@ def scrape(iname,path):
         driver.get(searchlink)
 
         time.sleep(3)
+        # Scroll till bottom to load all elements
+        initialHeight=driver.execute_script("return document.body.scrollHeight")
+
+        while True:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(0.5)
+            newHeight=driver.execute_script("return document.body.scrollHeight")
+            if(newHeight==initialHeight):
+                break
+            initialHeight=newHeight
 
         items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name btn col-md-12"]')
         prices=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-final-price"]')
@@ -153,6 +163,7 @@ def getItem(itemText:str,path:str):
 
         items=driver.find_elements(by=By.XPATH,value='//div[@class="product-card-name btn col-md-12"]')
         images=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
+        
         # imageFiltered:Any
         for image in images:
             if((image.get_attribute("src").find("essstr.blob"))==-1):
@@ -160,29 +171,39 @@ def getItem(itemText:str,path:str):
                 images.remove(image)
         length=len(items)
         ind=0
-        for item in items:
-            if(item.text==itemText):
-                itemDetails={}
-                
+        print("Items: "+str(length))
+        if(length>0):
+            for item in items:
+                if(item.text==searchitem):
+                    itemDetails={}
+                    
 
-                prodImage=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
+                    prodImage=driver.find_elements(by=By.XPATH,value='//img[@class="img-fluid"]')
 
-                itemDetails["Image"]=images[ind].get_attribute("src")
-                print("Images : "+str(len(images))+" Items: "+str(len(items)))
-                item.click()
-                time.sleep(5)
+                    itemDetails["image"]=images[ind].get_attribute("src")
+                    print("Images : "+str(len(images))+" Items: "+str(len(items)))
+                    item.click()
+                    time.sleep(5)
 
-                itemurl=driver.current_url
+                    itemurl=driver.current_url
+                    
+                    price=driver.find_element(by=By.XPATH,value='//span[@class="product-card-final-price"]')
 
-                itemDetails["URL"]=itemurl
-                itemDetails["name"]=itemText
-                return itemDetails
+                    itemDetails["URL"]=itemurl
+                    itemDetails["name"]=itemText
+                    itemDetails["price"]=price.text
+                    print("Keells get item: ")
+                    print(itemDetails)
+                    return itemDetails
 
-            else:
-                print("TEXT: "+item.text)
-            ind=ind+1
+                else:
+                    print("ITEMTEXT: "+item.text)
+                    print("sTEXT: "+searchitem)
+                ind=ind+1
 
-        return 'done'
+            return 'nomatch found'
+        else:
+            return({"Error":"Item not found"})
     finally:
         driver.close()
 

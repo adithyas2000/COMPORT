@@ -32,7 +32,15 @@ def scrape(getitem,chrome_path):
     itemVisible=wait.until(EC.visibility_of_element_located((By.XPATH,'//p[@class="ng-binding"]')),"Element item name loading timeout")
     
     # Scroll till bottom to load all elements
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+    initialHeight=driver.execute_script("return document.body.scrollHeight")
+
+    while True:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(0.5)
+        newHeight=driver.execute_script("return document.body.scrollHeight")
+        if(newHeight==initialHeight):
+            break
+        initialHeight=newHeight
 
     # Get references to WebElements
     items=driver.find_elements(by=By.XPATH,value='//p[@class="ng-binding"]')
@@ -119,11 +127,18 @@ def getItem(prodName:str,chrome_path):
             if(item.text==prodName):
                 item.click()
                 time.sleep(2)
-                itemurl={}
-                itemurl["URL"]=driver.current_url
-                itemurl["name"]=prodName
-                itemurl["Image"]=imglist[ind]
-                return itemurl
+                price=driver.find_element(by=By.XPATH,value='//h4[@class="txtSmall ng-binding"]')
+                priceChildren=price.find_elements(by=By.XPATH,value='.//*')
+                itemdata={}
+                itemdata["price"]=price.text
+                for child in priceChildren:
+                    print("Price mess:"+str(child.text))
+                    newprice=price.text.replace(child.text,"").strip()
+                    itemdata["price"]=newprice
+                itemdata["URL"]=driver.current_url
+                itemdata["name"]=prodName
+                itemdata["image"]=imglist[ind]
+                return itemdata
             ind=ind+1
     else:
         return {"Error":"No items"}
