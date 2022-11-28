@@ -23,7 +23,7 @@ function NavBar() {
   var authToken = window.sessionStorage.getItem("auth");
   var authorized = (authToken !== null);
   return (
-    <div>
+    <div id='navbar'>
 
       <Navbar bg="dark" variant="dark">
         <Container>
@@ -33,16 +33,12 @@ function NavBar() {
             <Nav.Link href="/testpage">Test Page</Nav.Link>
             {!getAuthState() && <Nav.Link href="/userWelcome">Login</Nav.Link>}
             {!getAuthState() && <Nav.Link href="/userSignup">Signup</Nav.Link>}
-            <Nav.Link href="/favourites">Favourites</Nav.Link>
+            {getAuthState() && <Nav.Link href="/favourites">Favourites</Nav.Link>}
 
 
 
             {getAuthState() && <NavDropdown title={"Account : " + window.sessionStorage.getItem("name")} id="basic-nav-dropdown">
-              <NavDropdown.Item href="#">Action</NavDropdown.Item>
-              <NavDropdown.Item href="#">
-                Another action
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#">Something</NavDropdown.Item>
+              <NavDropdown.Item href="/settings">Settings</NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item href="#">
                 <p id='logoutTextNavbar' onClick={logout}>LOGOUT</p>
@@ -51,6 +47,7 @@ function NavBar() {
           </Nav>
         </Container>
       </Navbar>
+      <hr style={{height:'20px',margin:'0px',marginBlockStart:'0px',color: 'rgb(77, 166, 255)',opacity:'80%'}}/>
     </div>
   );
 };

@@ -12,6 +12,25 @@ code {
     monospace;
 }
 
-#logoutTextNavbar{
+#logoutTextNavbar {
   color: red;
+}
+
+body {
+  background-image: url('../public/whitebg.jpg');
+  background-attachment: fixed;
+}
+
+#mainContainer {
+  width: 80%;
+  padding: 40px;
+  margin-left: 10%;
+  margin-top: 5%;
+  border-radius:20px
+}
+
+#navbar{
+  position: fixed;
+  top: 0;
+  width: 100%;
 }

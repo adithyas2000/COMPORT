@@ -1,38 +1,35 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import axios from 'axios';
-import {useState} from 'react';
-function TestPage(){
-    const[remoteUrl,setRemoteUrl]=useState("NULL");
-    return(
-        <div id='container'>
-            <Form id='testURL' onSubmit={onSubmit}>
-                <Form.Group className='mb-3'>
-                    <Form.Control type='text' required onChange={e=>{onEditURL(e.target.value)}} value={remoteUrl}/>
-                    <Button variant='primary' type='submit'>Run</Button>
-                </Form.Group>
+import { useParams } from "react-router-dom";
+import { LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts';
 
-            </Form>
+function FavChart() {
+    // let {favName}=useParams();
+    // console.log("Param:"+favName);
+
+
+    const data = [
+        { year: 2010, count: 10 },
+        { year: 2011, count: 20 },
+        { year: 2012, count: 15 },
+        { year: 2013, count: 25 },
+        { year: 2014, count: 22 },
+        { year: 2015, count: 30 },
+        { year: 2016, count: 28 },
+    ];
+
+
+
+    return (
+        <div id='favchart' class="border border-5 border-primary shadow bg-white p-5" style={{ width: '80%', padding: 50, margin: '10%', borderRadius: 50 }}>
+            <h2>FavCharts</h2>
+
+            <LineChart width={600} height={300} data={data}>
+                <Line type="monotone" dataKey="count" stroke="#8884d8" />
+                <CartesianGrid stroke="#ccc" />
+                <XAxis dataKey="year" />
+                <YAxis />
+            </LineChart>
         </div>
     )
-
-    function onSubmit(event){
-        event.preventDefault();
-        console.log("Connecting to : "+remoteUrl);
-        axios.get(remoteUrl)
-        .then(res=>{
-            let jstr = JSON.stringify(res.data);
-            console.log("AXIOS: "+jstr);
-        })
-        .catch(err=>{
-            console.error("AXOS ERROR MSG :"+err.message+"\nAXIOS ERROR REQ:"+err.request+"\nAXIOS ERROR RES:"+err.response);
-        })
-    }
-    function onEditURL(link){
-        setRemoteUrl(link);
-    }
 }
+export default FavChart;
 
-
-export default TestPage;
