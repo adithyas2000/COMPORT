@@ -1,6 +1,7 @@
 
 # from requests import request
 # import selenium
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 from modules.User import User
@@ -10,10 +11,11 @@ from modules import accountManager
 from modules import keellsScraper as keels
 from modules import foodcityScraper as fcity
 from modules import arpicoScraper as arpico
+from modules import common
 from flask import Flask, jsonify, make_response,request, session
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 import pymongo
-from os.path import exists
+from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
 
@@ -36,6 +38,9 @@ def getDataDict(dataobj):
 app=Flask(__name__)
 app.secret_key='comport secret'
 CORS(app)
+# Scheduler for cron jobs
+scheduler=BackgroundScheduler(daemon=True)
+scheduler.start()
 
 
 
@@ -122,7 +127,7 @@ def removeFromHistory():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
         timestamp:str=request.args.get('timestamp')
         history=accountManager.removeFromSearchHistory(timestamp,authToken)
         response=make_response(history)
@@ -136,7 +141,8 @@ def getHistory():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
+        print("Auth token: "+str(authToken))
         history=accountManager.getSearchHistory(authToken)
         return history
     else:
@@ -147,23 +153,88 @@ def clearHistory():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
         history=accountManager.clearSearchHistory(authToken)
         return history
     else:
+        print("Auth token: "+str(authToken))
         return{"Error":"Log in to continue"}
 # ---------------------------------------------------------
+# ---------------------WATCHLIST--------------------------
+@app.route('/getwatchitem/')
+def getWatchItem():
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if((authToken!='null') & (authToken!=None)):
+        prodName=request.args.get('prodname')
+        userfavs=accountManager.getAllFavs(authToken)
+        for fav in userfavs.values():
+            if fav["name"]==prodName:
+                print("User has fav in watch")
+                if (fav["URL"].find("keells")!=-1):
+                    shop="keells"
+                elif(fav["URL"].find("cargills")!=-1):
+                    shop="foodcity"
+                elif(fav["URL"].find("arpico")!=-1):
+                    shop="arpico"
+                
+                itemDoc:dict=common.getWatchItem(prodName,shop)
+                if(itemDoc!=None):
+                    itemDoc.pop("_id")
+                    itemDoc.pop("name")
+                    # Make custom dict for chart
+                    n=0
+                    chartData=[]
+                    for date in itemDoc:
+                        print("Date: "+str(date))
+                        chartData.append({"date":date,"price":itemDoc[date]})
+                        n=n+1
+                    print (chartData)
+                    return {"Chartdata":chartData}
+                else:
+                    return{"Error":"Item not found in watchlist"}
+            else:
+                print("Item not in favs: got - "+str(prodName)+" found - "+fav["name"])
+                # return{"Error":"Item not in favs"}
+    else:
+        return({"Error":"Log in to continue"})
+
+@app.route('/addwatchitem/')
+def addWatchItem():
+    if(request.method=='OPTIONS'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if((authToken!='null') & (authToken!=None)):
+        prodName=request.args.get('prodName')
+        shop=request.args.get('shop')
+        price=float(request.args.get('price'))
+        res=common.addToWatchlist(prodName,shop,price)
+        return res
+    else:
+        return{"Error":"Log in to continue"}
+
+             
+# ----------------------------------------------------------
 # ---------------------FAVOURITES MANAGEMENT----------------
 @app.route('/addToFavs/')
 def addtofavs():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
         prodName=request.args.get('prodname')
         shop=request.args.get('shop')
-        res=accountManager.addToFavourites(prodName,shop,authToken)
-        return(res)
+        # price=float(request.args.get('price'))
+        favRes=accountManager.addToFavourites(prodName,shop,authToken)
+        if(("Error" in favRes)):
+            print("Error : "+favRes["Error"])
+            return favRes
+        else:
+            watchRes=common.addToWatchlist(prodName,shop,favRes["price"])
+            # favRes.update(watchRes)
+            print("Added to watchlist")
+            return(watchRes)
     else:
         return{"Error":"Log in to continue"}
 
@@ -172,7 +243,8 @@ def getFavs():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
+        print("Fav got token: "+str(authToken))
         res=accountManager.getAllFavs(authToken)
         return res
     else:
@@ -183,13 +255,31 @@ def removeFromFavs():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
         timestamp=request.args.get('timestamp')
         res=accountManager.removeFromFavourites(timestamp,authToken)
         return res
     else:
         return{"Error":"Log in to continue"}
 # ------------------------------------------------------------
+# ---------------------PASSWORD CHANGE------------------------------
+@app.route('/changepass/',methods=['POST'])
+def changePass():
+    print("Changepass method : "+str(request.method))
+    if(request.method!='POST'):
+        return corsAllowHeaders()
+    authToken=request.headers.get("Authorization")
+    if((authToken!='null') & (authToken!=None)):
+        currentPass=request.form["currentPass"]   
+        newPass=request.form["newPass"]
+        print("Current pass:"+currentPass)
+        print("New pass: "+newPass)
+        res=accountManager.changePass(authToken,currentPass,newPass)
+        resp=make_response(res)
+        resp.access_control_allow_origin="*"
+        return resp
+    else:
+        return{"Error":"Log in to continue"}
 # ---------------------TEST ENDPOINTS--------------------------------
 
 @app.route('/')
@@ -227,7 +317,7 @@ def gethdoc():
     if(request.method=='OPTIONS'):
         return corsAllowHeaders()
     authToken=request.headers.get("Authorization")
-    if(authToken!=None):
+    if((authToken!='null') & (authToken!=None)):
         stext:str=request.args.get('sitem')
         print("Adding "+stext)
         hdoc=accountManager.addToSearchHistory(stext,authToken.replace("Bearer ",""))
@@ -260,17 +350,85 @@ def arpicoitem():
     res=arpico.getItem(item,chrome_path)
     return res
 
+@app.route('/runcron/',methods=['GET','POST'])
+def runcron():
+    print("----------------STARTING CRON JOBS------------------------")
+    try:
+        client = pymongo.MongoClient(os.environ.get("MONGO_URL"))
+    except Exception as e:
+        print(e)
+        try:
+            client = pymongo.MongoClient(os.environ.get("MONGO_URL_ALT"))
+        except Exception as e2:
+            print(e2)
+    else:
+        db=client["watchlist"]
+        keelsCollection=db["keells"]
+        foodcityCollection=db["foodcity"]
+        arpicoCollection=db["arpico"]
 
-# ------------------------------------------------------------------------
+        keellsWatchlist=keelsCollection.find()
+        for item in keellsWatchlist:
+            print(item["name"])
+            prod=keels.getItem(item["name"],chrome_path)
+            if(prod!=None):
+                price=float(prod["price"].split(" ")[1].replace(",",""))
+                print(price)
+                date=str(datetime.now().isoformat(timespec='seconds')).split("T")[0]
+                doc=keelsCollection.find_one_and_update(item,{"$set":{date:price}})
+                if(doc==None):
+                    print("Doc is none")
+                else:
+                    print(doc)
+
+        foodcityWatchlist=foodcityCollection.find()
+        for item in foodcityWatchlist:
+            print(item["name"])
+            prod=fcity.getItem(item["name"],chrome_path)
+            if(prod!=None):
+                price=float(prod["price"].split(" ")[1])
+                print(price)
+                date=str(datetime.now().isoformat(timespec='seconds')).split("T")[0]
+                doc=foodcityCollection.find_one_and_update(item,{"$set":{date:price}})
+                if(doc==None):
+                    print("Doc is none")
+                else:
+                    print(doc)       
+
+        arpicoWatchlist=arpicoCollection.find()
+        for item in arpicoWatchlist:
+            print(item["name"])
+            prod=arpico.getItem(item["name"],chrome_path)
+            if(prod!=None):
+                price=float(prod["price"].replace("LKR","").replace(",",""))
+                print(price)
+                date=str(datetime.now().isoformat(timespec='seconds')).split("T")[0]
+                doc=arpicoCollection.find_one_and_update(item,{"$set":{date:price}})
+                if(doc==None):
+                    print("Doc is none")
+                else:
+                    print(doc)            
+            # propcount=0
+            # for prop in item:
+            #     if(propcount>1):
+            #         print (prop+":     "+str(item[prop]))
+            #     propcount=propcount+1
+        print("---------------------------FINISHING CRON JOBS----------------------------")
+        return "Done"
+
+# ---------------------------------------------------------------------------------
+# ----------------------------CORS HEADERS--------------------------------------------
 def corsAllowHeaders():
     print("Sending allow headers...")
     res=make_response()
-    res.access_control_allow_credentials=True
+    # res.access_control_allow_credentials=True
     res.access_control_allow_credentials=True
     res.access_control_allow_origin="*"
     res.status_code=200
     return res
 
+# adding jobs to scheduler
+scheduler.add_job(runcron,trigger="cron",hour=17,minute=38)
 
 app.run()
 
