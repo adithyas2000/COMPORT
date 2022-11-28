@@ -1,15 +1,15 @@
 import os
 from dotenv import load_dotenv
-from flask_login import current_user
-import jwt
 import pymongo
 from modules import userManagement
 from datetime import datetime
 from modules import keellsScraper as keells
 from modules import foodcityScraper as foodcity
 from modules import arpicoScraper as arpico
+from modules import encrypt
 
 from modules import jwtDecode
+import bcrypt
 
 
 load_dotenv()
@@ -21,7 +21,7 @@ history_filter={"Doc_ID":"History"}
 
 client = pymongo.MongoClient(os.environ.get("MONGO_URL"))
 db=client["users"]
-
+accountdb=client["accounts"]
 
 
 def addToSearchHistory(historyItem:str,token:str):
@@ -61,7 +61,7 @@ def removeFromSearchHistory(item:str,token:str):
         searchText:str=historyDoc[item]
         updatedHistory=userDocs.update_one(history_filter,{"$unset":{item:searchText}})
         # print("Updated: "+str(updatedHistory.modified_count))
-        return({"Updated":str(updatedHistory.modified_count)})
+        return({"Updated":updatedHistory.modified_count})
     except Exception as e:
         print(str(e))
         return({"Error":str(e)})
@@ -101,6 +101,8 @@ def getSearchHistory(token:str):
                     print("Item "+str(n)+" : "+str(item))
                 n=n+1
             return(dateDict)
+        else:
+            return ({})
     except Exception as e:
         print("ERROR : "+str(e))
         return({"Error":str(e)})
@@ -111,14 +113,14 @@ def addToFavourites(productname:str,shop:str,token:str):
     loggedinuser=tokenResult["email"]
     userDocs=db[loggedinuser]
     # Check if has a favs doc, if not create
-    itemurl:str=""
+    Itemdata=None
     if(shop=="keells"):
-        itemurl=keells.getItem(productname,chrome_path)
+        Itemdata=keells.getItem(productname,chrome_path)
     elif(shop=="foodcity"):
-        itemurl=foodcity.getItem(productname,chrome_path)
+        Itemdata=foodcity.getItem(productname,chrome_path)
     elif(shop=="arpico"):
-        itemurl=arpico.getItem(productname,chrome_path)
-    print("ItemURL:"+str(itemurl))
+        Itemdata=arpico.getItem(productname,chrome_path)
+    print("Itemdata:"+str(Itemdata))
         
     try:
         favsDoc=userDocs.find_one(fav_filter)
@@ -129,14 +131,16 @@ def addToFavourites(productname:str,shop:str,token:str):
         duplicate:bool=False
         for fav in currentFavs.values():
             print(fav)
-            if(fav==itemurl):
+            if(fav==Itemdata):
                 duplicate=True
                 break
         if(duplicate):
-            return {"Warn":"Duplicate"}
+            return {"Warn":"Duplicate","price":Itemdata["price"]}
         else:
-            favsUpdated=userDocs.update_one(fav_filter,{"$set":{time:itemurl}})
-            return {"Modified":str(favsUpdated.modified_count)}
+            if("Error" in Itemdata):
+                return Itemdata
+            favsUpdated=userDocs.update_one(fav_filter,{"$set":{time:Itemdata}})
+            return {"price":Itemdata["price"]}
     except Exception as e:
         print(str(e))
         return({"Error":str(e)})
@@ -179,3 +183,30 @@ def getAllFavs(token:str):
     except Exception as e:
         print(str(e))
         return({"Error":str(e)})
+
+def changePass(token:str,currentPass:str,newPass:str):
+    tokenResult=jwtDecode.decode(token)
+    print(tokenResult)
+    loggedinuser=tokenResult["email"]
+    print("User: "+str(loggedinuser))
+    users=accountdb["users"]
+    try:
+        user=users.find_one({"email":loggedinuser})
+        if(user!=None):
+            password=user["password"]
+            if(bcrypt.checkpw(currentPass.encode('utf-8'),password)):
+                # print("Passwords match")
+                encryptedPass=encrypt.encrypt(newPass)
+                updatePass=users.update_one({"email":loggedinuser},{'$set':{"password":encryptedPass}})
+                if(updatePass.modified_count>0):
+                    return{"Success":"Updated password"}
+                else:
+                    return{"Error":"Domething went wrong"}
+            else:
+                print("Passwords dont match")
+                return{"Error":"Email or password do not match"}
+        else:
+            return{"Error":"Invalid user"}
+    except Exception as e:
+        print(str(e))
+        return{"Error":str(e)}
