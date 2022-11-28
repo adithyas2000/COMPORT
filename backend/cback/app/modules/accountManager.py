@@ -140,6 +140,7 @@ def addToFavourites(productname:str,shop:str,token:str):
             if("Error" in Itemdata):
                 return Itemdata
             favsUpdated=userDocs.update_one(fav_filter,{"$set":{time:Itemdata}})
+            print("Price : "+str(Itemdata["price"]))
             return {"price":Itemdata["price"]}
     except Exception as e:
         print(str(e))

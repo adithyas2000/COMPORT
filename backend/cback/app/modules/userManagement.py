@@ -21,6 +21,7 @@ except Exception as e:
 
 
 db=client["accounts"]
+userDb=client["users"]
 userCollection=db["users"]
 
 
@@ -40,6 +41,7 @@ def signup(email:str,password:str):
         encrypedPassword=encrypt.encrypt(password)
         passwordStr:string=encrypedPassword.decode('utf-8')
         newUser=userCollection.insert_one({"email":email,"password":encrypedPassword})
+        # newUserDb=userDb.create_collection(email)
         print("Insert:"+str(newUser))
 
     

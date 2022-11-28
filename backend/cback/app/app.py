@@ -186,7 +186,7 @@ def getWatchItem():
                     # Make custom dict for chart
                     n=0
                     chartData=[]
-                    for date in itemDoc:
+                    for date in sorted(itemDoc):
                         print("Date: "+str(date))
                         chartData.append({"date":date,"price":itemDoc[date]})
                         n=n+1
@@ -231,7 +231,13 @@ def addtofavs():
             print("Error : "+favRes["Error"])
             return favRes
         else:
-            watchRes=common.addToWatchlist(prodName,shop,favRes["price"])
+            if(shop=="keells"):
+                price=float(favRes["price"].split(" ")[1].replace(",",""))
+            elif(shop=="foodcity"):
+                price=float(favRes["price"].split(" ")[1])
+            elif(shop=="arpico"):
+                price=float(favRes["price"].replace("LKR","").replace(",",""))
+            watchRes=common.addToWatchlist(prodName,shop,price)
             # favRes.update(watchRes)
             print("Added to watchlist")
             return(watchRes)
